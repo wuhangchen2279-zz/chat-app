@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router} from '@angular/router';
 
 import { User } from '../_models/index';
 import { UserService } from '../_services/index';
@@ -13,9 +14,11 @@ import { appConfig } from '../app.config';
 export class HomeComponent implements OnInit {
     currentUser: User;
     users: User[] = [];
-    socket = io(appConfig.apiUrl);
+    socket = io.connect(appConfig.apiUrl);
 
-    constructor(private userService: UserService) {
+    constructor(
+        private userService: UserService,
+        private router: Router) {
         this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     }
 
@@ -23,8 +26,17 @@ export class HomeComponent implements OnInit {
         this.loadAllUsers();
     }
 
+    selectedUser(username: string) {
+        this.socket.emit('join', { username: username })
+    }
+
     deleteUser(_id: string) {
         this.userService.delete(_id).subscribe(() => { this.loadAllUsers() });
+    }
+
+    logout(routeValue) {
+        this.socket.disconnect();
+        this.router.navigate([routeValue]);
     }
 
     private loadAllUsers() {
